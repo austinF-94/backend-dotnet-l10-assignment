@@ -1,13 +1,29 @@
 using l10_assignment.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace l10_assignment.Repositories;
+namespace l10_assignment.Migrations;
 
-public class MockPetRepository : IPetRepository
+public class PetsDbContext : DbContext
 {
-    private List<Pet> petList;
+    public DbSet<Pet> Pet { get; set; }
+    public PetsDbContext(DbContextOptions<PetsDbContext> options)
+        : base(options)
+    {
+    }
 
-    public MockPetRepository() {
-        petList = new List<Pet> {
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Pet>(entity =>
+        {
+            entity.HasKey(e => e.PetId);
+            entity.Property(e => e.PetName).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+            entity.Property(e => e.Description).IsRequired();
+        });
+        modelBuilder.Entity<Pet>().HasData(
             new Pet {
                 PetId = 1,
                 PetName = "Charlie",
@@ -32,48 +48,6 @@ public class MockPetRepository : IPetRepository
                 Type = "Cat",
                 Description = "If you can find a space in your home near the sunshine through your window, Coco would love to be a part of your family. This gorgeous calico can not wait to have a family of her own once again. She is roughly 4 years old and has many many years of love to share."
             }
-        };
-    }
-
-    public Pet CreatePet(Pet newPet)
-    {
-        var maxId = petList.Select(pet => pet.PetId)
-            .DefaultIfEmpty()
-            .Max();
-
-        newPet.PetId = maxId + 1;
-
-        petList.Add(newPet);
-        return newPet;
-    }
-
-    public void DeletePetById(int petId)
-    {
-        var petToRemove = petList.Find(p => p.PetId == petId);
-        if (petToRemove != null) {
-            petList.Remove(petToRemove);
-        }
-    }
-
-    public Pet? GetPetById(int petId)
-    {
-        return petList.Find(p => p.PetId == petId);
-    }
-
-    public IEnumerable<Pet> GetPets()
-    {
-        return petList;
-    }
-
-    public Pet? UpdatePet(Pet newPet)
-    {
-        var existingPet = petList.Find(p => p.PetId == newPet.PetId);
-
-        if (existingPet != null) {
-            existingPet.PetName = newPet.PetName;
-            existingPet.Type = newPet.Type;
-            existingPet.Description = newPet.Description;
-        }
-        return existingPet;
+);
     }
 }
